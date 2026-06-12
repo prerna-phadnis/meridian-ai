@@ -6,6 +6,7 @@ cffi==2.0.0
 click==8.4.1
 cryptography==48.0.1
 deprecation==2.1.0
+distro==1.9.0
 fastapi==0.136.3
 h11==0.16.0
 h2==4.3.0
@@ -15,7 +16,9 @@ httptools==0.8.0
 httpx==0.28.1
 hyperframe==6.1.0
 idna==3.18
+jiter==0.15.0
 multidict==6.7.1
+openai==2.41.1
 packaging==26.2
 postgrest==2.31.0
 propcache==0.5.2
@@ -23,15 +26,18 @@ pycparser==3.0
 pydantic==2.13.4
 pydantic_core==2.46.4
 PyJWT==2.13.0
+PyMuPDF==1.27.2.3
 python-dotenv==1.2.2
 PyYAML==6.0.3
 realtime==2.31.0
+sniffio==1.3.1
 starlette==1.2.1
 storage3==2.31.0
 StrEnum==0.4.15
 supabase==2.31.0
 supabase-auth==2.31.0
 supabase-functions==2.31.0
+tqdm==4.68.2
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.49.0
