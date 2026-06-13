@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.routes.health import router as health_router
 from src.routes.process import router as process_router
+from src.routes.chat import router as chat_router
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -33,6 +34,13 @@ app.include_router(
     prefix="/api",
     tags=["process"]
 )
+
+app.include_router(
+    chat_router,
+    prefix="/api",
+    tags=["chat"]
+)
+
 
 @app.get("/")
 async def root():
