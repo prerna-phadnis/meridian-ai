@@ -1,36 +1,26 @@
-from openai import AzureOpenAI
+from google import genai
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
-client = AzureOpenAI(
-    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-)
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-EMBEDDING_MODEL = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT")  # ← fixed: was AZURE_OPENAI_DEPLOYMENT_NAME
-EMBEDDING_DIMENSIONS = 1536
-
+EMBEDDING_MODEL = "models/gemini-embedding-001"
+EMBEDDING_DIMENSIONS = 768
 
 def generate_embedding(text: str) -> list[float]:
     text = text.replace("\n", " ").strip()
-
-    response = client.embeddings.create(
+    result = client.models.embed_content(
         model=EMBEDDING_MODEL,
-        input=text
+        contents=text
     )
-
-    return response.data[0].embedding
-
+    return result.embeddings[0].values
 
 def generate_embeddings_batch(texts: list[str]) -> list[list[float]]:
     cleaned = [t.replace("\n", " ").strip() for t in texts]
-
-    response = client.embeddings.create(
+    result = client.models.embed_content(
         model=EMBEDDING_MODEL,
-        input=cleaned
+        contents=cleaned
     )
-
-    return [item.embedding for item in response.data]
+    return [e.values for e in result.embeddings]

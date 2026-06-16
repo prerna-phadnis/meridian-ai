@@ -20,7 +20,7 @@ client = QdrantClient(
 )
 
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "meridian_papers")
-VECTOR_SIZE = 1536
+VECTOR_SIZE = 3072
 
 
 def ensure_collection_exists():
@@ -80,10 +80,11 @@ def search_similar_chunks(
     paper_id: str,
     limit: int = 5
 ) -> list[dict]:
+    ensure_collection_exists()
 
-    results = client.search(
+    results = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=query_embedding,
+        query=query_embedding,
         query_filter=Filter(
             must=[
                 FieldCondition(
@@ -103,7 +104,7 @@ def search_similar_chunks(
             "chunk_index": hit.payload["chunk_index"],
             "score": hit.score
         }
-        for hit in results
+        for hit in results.points
     ]
 
 
