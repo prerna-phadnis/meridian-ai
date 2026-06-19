@@ -20,7 +20,7 @@ client = QdrantClient(
 )
 
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "meridian_papers")
-VECTOR_SIZE = 3072
+VECTOR_SIZE = 768
 
 
 def ensure_collection_exists():

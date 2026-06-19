@@ -1,0 +1,86 @@
+from google import genai
+from google.genai import types
+from dotenv import load_dotenv
+import os
+import logging
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+# Single client instance
+# Reused across all services
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
+
+# Models we use
+# Flash = fast + cheap (good for notes, citations)
+# Pro = smarter (good for complex reasoning)
+FLASH_MODEL = "gemini-2.0-flash"
+PRO_MODEL = "gemini-1.5-pro"
+
+
+def generate_text(
+    prompt: str,
+    model: str = FLASH_MODEL,
+    temperature: float = 0.2,
+    max_tokens: int = 2000,
+    json_mode: bool = False
+) -> str:
+    """
+    Simple text generation.
+    Use this for notes, citations, summaries.
+    """
+
+    config_params = {
+        "temperature": temperature,
+        "max_output_tokens": max_tokens,
+    }
+
+    # JSON mode ensures valid JSON output
+    if json_mode:
+        config_params["response_mime_type"] = "application/json"
+
+    config = types.GenerateContentConfig(**config_params)
+
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt,
+        config=config
+    )
+
+    return response.text
+
+
+def generate_text_with_system(
+    system_prompt: str,
+    user_prompt: str,
+    model: str = FLASH_MODEL,
+    temperature: float = 0.2,
+    max_tokens: int = 2000,
+    json_mode: bool = False
+) -> str:
+    """
+    Generation with system + user prompt.
+    Use this for RAG chat.
+    """
+
+    config_params = {
+        "temperature": temperature,
+        "max_output_tokens": max_tokens,
+        "system_instruction": system_prompt,
+    }
+
+    if json_mode:
+        config_params["response_mime_type"] = "application/json"
+
+    config = types.GenerateContentConfig(**config_params)
+
+    response = client.models.generate_content(
+        model=model,
+        contents=user_prompt,
+        config=config
+    )
+
+    return response.text
