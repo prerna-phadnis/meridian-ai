@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.routes.health import router as health_router
 from src.routes.process import router as process_router
+from src.routes.notes import router as notes_router
+from src.routes.citations import router as citations_router
 from src.routes.chat import router as chat_router
 from dotenv import load_dotenv
 
@@ -33,6 +35,18 @@ app.include_router(
     process_router,
     prefix="/api",
     tags=["process"]
+)
+
+app.include_router(
+    notes_router,
+    prefix="/api",
+    tags=["notes"]
+)
+
+app.include_router(
+    citations_router,
+    prefix="/api",
+    tags=["citations"]
 )
 
 app.include_router(

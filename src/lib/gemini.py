@@ -1,3 +1,4 @@
+# src/lib/gemini.py
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -8,17 +9,12 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# Single client instance
-# Reused across all services
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
 
-# Models we use
-# Flash = fast + cheap (good for notes, citations)
-# Pro = smarter (good for complex reasoning)
-FLASH_MODEL = "gemini-2.0-flash"
-PRO_MODEL = "gemini-1.5-pro"
+FLASH_MODEL = "gemini-2.5-flash"
+PRO_MODEL = "gemini-2.5-pro"
 
 
 def generate_text(
@@ -36,9 +32,13 @@ def generate_text(
     config_params = {
         "temperature": temperature,
         "max_output_tokens": max_tokens,
+        # gemini-2.5+ models think by default, and thinking tokens count
+        # against max_output_tokens — causing truncated/invalid JSON on
+        # structured-output tasks like this. We don't need reasoning for
+        # extraction/formatting, so turn it off.
+        "thinking_config": types.ThinkingConfig(thinking_budget=0),
     }
 
-    # JSON mode ensures valid JSON output
     if json_mode:
         config_params["response_mime_type"] = "application/json"
 
@@ -70,6 +70,7 @@ def generate_text_with_system(
         "temperature": temperature,
         "max_output_tokens": max_tokens,
         "system_instruction": system_prompt,
+        "thinking_config": types.ThinkingConfig(thinking_budget=0),
     }
 
     if json_mode:

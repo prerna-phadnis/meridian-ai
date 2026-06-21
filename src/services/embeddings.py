@@ -13,7 +13,14 @@ client = genai.Client(
 )
 
 # Gemini embedding model
-EMBEDDING_MODEL = "text-embedding-004"
+# text-embedding-004 was shut down by Google on Jan 14, 2026 — replaced by gemini-embedding-001
+EMBEDDING_MODEL = "gemini-embedding-001"
+
+# gemini-embedding-001 defaults to 3072 dims, but supports MRL truncation.
+# We pin to 768 to stay compatible with your existing Qdrant collection
+# (if you ever want better recall, bump this to 1536 or 3072 — but you'll
+# need to recreate your Qdrant collection with the new vector size and
+# re-embed everything).
 EMBEDDING_DIMENSIONS = 768
 
 
@@ -27,7 +34,8 @@ def generate_embedding(text: str) -> list[float]:
         model=EMBEDDING_MODEL,
         contents=cleaned,
         config=types.EmbedContentConfig(
-            task_type="RETRIEVAL_DOCUMENT"
+            task_type="RETRIEVAL_DOCUMENT",
+            output_dimensionality=EMBEDDING_DIMENSIONS,
         )
     )
 
@@ -49,16 +57,19 @@ def generate_embeddings_batch(texts: list[str]) -> list[list[float]]:
     for i in range(0, len(cleaned), batch_size):
         batch = cleaned[i:i + batch_size]
 
-        for text in batch:
-            response = client.models.embed_content(
-                model=EMBEDDING_MODEL,
-                contents=text,
-                config=types.EmbedContentConfig(
-                    task_type="RETRIEVAL_DOCUMENT"
-                )
+        # Send the whole batch in one call instead of looping per-text —
+        # gemini-embedding-001 accepts a list for `contents` and returns
+        # embeddings in the same order.
+        response = client.models.embed_content(
+            model=EMBEDDING_MODEL,
+            contents=batch,
+            config=types.EmbedContentConfig(
+                task_type="RETRIEVAL_DOCUMENT",
+                output_dimensionality=EMBEDDING_DIMENSIONS,
             )
+        )
 
-            embeddings.append(response.embeddings[0].values)
+        embeddings.extend([e.values for e in response.embeddings])
 
         logger.info(
             f"Embedded batch {i // batch_size + 1} "
