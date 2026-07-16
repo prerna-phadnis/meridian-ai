@@ -1,0 +1,12 @@
+venv
+qdrant_storage
+__pycache__
+**/__pycache__
+*.pyc
+.env
+.env.*
+*.md
+test_*.py
+run.py
+Dockerfile
+.dockerignore
