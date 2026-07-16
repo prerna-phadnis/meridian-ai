@@ -1,0 +1,74 @@
+# Render Blueprint for meridian-ai (FastAPI RAG service) + Qdrant vector DB.
+# Connect this repo in the Render dashboard: New → Blueprint → meridian-ai
+#
+# Qdrant runs as a Docker container pulled straight from Docker Hub — it needs
+# no repo of its own, so it lives in this blueprint next to the service that
+# uses it. It is a *private* service: only reachable from other Render services
+# in this region over the private network, never from the public internet.
+#
+# NOTE: private services and persistent disks require a paid instance type
+# (starter, ~$7/mo). If you want to stay on the free tier, delete the
+# meridian-qdrant service below, use a free Qdrant Cloud cluster
+# (https://cloud.qdrant.io) instead, and set QDRANT_URL/QDRANT_API_KEY to the
+# cluster's values.
+
+services:
+  # ── FastAPI AI service ──
+  - type: web
+    name: meridian-ai
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free # PyMuPDF + embeddings can be memory-hungry; bump to `starter` (512MB→2GB) if you see OOM restarts
+    region: oregon # must match meridian-qdrant so the private network connects them
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # Internal address of the Qdrant private service below (http, port 6333).
+      # Verify the internal hostname under meridian-qdrant → "Connect" in the
+      # dashboard if Render suffixed the name.
+      - key: QDRANT_URL
+        value: http://meridian-qdrant:6333
+      # Same key Qdrant was started with — pulled from the sibling service.
+      - key: QDRANT_API_KEY
+        fromService:
+          name: meridian-qdrant
+          type: pserv
+          envVarKey: QDRANT__SERVICE__API_KEY
+      - key: QDRANT_COLLECTION
+        value: meridian_papers
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: NODE_API_URL # public URL of meridian-api, e.g. https://meridian-api-xxxx.onrender.com
+        sync: false
+      - key: AZURE_OPENAI_API_KEY
+        sync: false
+      - key: AZURE_OPENAI_ENDPOINT
+        sync: false
+      - key: AZURE_OPENAI_API_VERSION
+        sync: false
+      - key: AZURE_OPENAI_DEPLOYMENT_NAME
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS # e.g. https://meridian-web-xxxx.onrender.com,http://localhost:5173
+        sync: false
+
+  # ── Qdrant vector DB (official Docker image, private service + persistent disk) ──
+  - type: pserv
+    name: meridian-qdrant
+    runtime: image
+    image:
+      url: docker.io/qdrant/qdrant:v1.15.1
+    plan: starter
+    region: oregon
+    envVars:
+      # Require an API key even on the private network; Render generates the
+      # value and meridian-ai reads it via fromService above.
+      - key: QDRANT__SERVICE__API_KEY
+        generateValue: true
+    disk:
+      name: qdrant-data
+      mountPath: /qdrant/storage
+      sizeGB: 1 # grow later if needed; disks can be resized up in the dashboard

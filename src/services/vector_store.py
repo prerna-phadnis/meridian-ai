@@ -16,7 +16,8 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 client = QdrantClient(
-    url=os.getenv("QDRANT_URL", "http://localhost:6333")
+    url=os.getenv("QDRANT_URL", "http://localhost:6333"),
+    api_key=os.getenv("QDRANT_API_KEY") or None,
 )
 
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "meridian_papers")

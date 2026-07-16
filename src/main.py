@@ -8,6 +8,7 @@ from src.routes.chat import router as chat_router
 from src.routes.delete import router as delete_router
 
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
@@ -19,8 +20,10 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ORIGINS", "http://localhost:5173,http://localhost:3000"
+        ).split(",")
     ],
     allow_credentials=True,
     allow_methods=["*"],
